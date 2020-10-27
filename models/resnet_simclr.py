@@ -5,6 +5,7 @@ import torchvision.models as models
 
 class RADSimCLR(nn.Module):
     def __init__(self, base_model, out_dim, obs_shape=(9, 84, 84), feature_dim=256, num_layers=4, num_filters=32):
+        super().__init__()
         self.convs = nn.ModuleList(
              [nn.Conv2d(obs_shape[0], num_filters, 3, stride=2)]
         )

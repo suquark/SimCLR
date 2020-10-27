@@ -18,7 +18,7 @@ class RLTrajectoryDataSet(Dataset):
         return 600000 // 3
 
     def __getitem__(self, idx):
-        imgs = []
+        x1, x2 = [], []
         for i in range(3):
             im = Image.open(f"/home/ubuntu/efs/rad/saved_images/{idx*3+i}.jpg")
             width, height = im.size   # Get dimensions
@@ -30,9 +30,10 @@ class RLTrajectoryDataSet(Dataset):
 
             # Crop the center of the image
             im = im.crop((left, top, right, bottom))
-            im = self.transform(im)
-            imgs.append(im)
-        return torch.cat(imgs, dim=-3)
+            im1, im2 = self.transform(im)
+            x1.append(im1)
+            x2.append(im2)
+        return (torch.cat(x1, dim=-3), torch.cat(x2, dim=-3)), 0
 
 
 class DataSetWrapper(object):
@@ -59,7 +60,7 @@ class DataSetWrapper(object):
                                               transforms.RandomHorizontalFlip(),
                                               transforms.RandomApply([color_jitter], p=0.8),
                                               transforms.RandomGrayscale(p=0.2),
-                                              GaussianBlur(kernel_size=int(0.1 * self.input_shape[0])),
+                                              GaussianBlur(kernel_size=int(0.1 * self.input_shape[0])//2*2+1),
                                               transforms.ToTensor()])
         return data_transforms
 

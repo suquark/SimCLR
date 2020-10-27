@@ -6,6 +6,7 @@ from loss.nt_xent import NTXentLoss
 import os
 import shutil
 import sys
+import tqdm
 
 apex_support = False
 try:
@@ -84,6 +85,7 @@ class SimCLR(object):
         best_valid_loss = np.inf
 
         for epoch_counter in range(self.config['epochs']):
+          with tqdm.tqdm(total=len(train_loader)) as progress_bar:
             for (xis, xjs), _ in train_loader:
                 optimizer.zero_grad()
 
@@ -103,7 +105,11 @@ class SimCLR(object):
 
                 optimizer.step()
                 n_iter += 1
+                if n_iter % 100 == 0:
+                     torch.save(model.state_dict(), os.path.join(model_checkpoints_folder, f'model{n_iter}.pth'))
+                progress_bar.update(1)
 
+            torch.save(model.state_dict(), os.path.join(model_checkpoints_folder, f'model.pth'))
             # validate the model if requested
             if epoch_counter % self.config['eval_every_n_epochs'] == 0:
                 valid_loss = self._validate(model, valid_loader)
