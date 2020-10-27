@@ -8,11 +8,11 @@ fp16_precision: False
 
 model:
   out_dim: 256
-  base_model: "resnet18"
+  base_model: "xxxxxxx"
 
 dataset:
   s: 1
-  input_shape: (96,96,3)
+  input_shape: (84,84,3)
   num_workers: 0
   valid_size: 0.05
 

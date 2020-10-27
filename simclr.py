@@ -1,5 +1,5 @@
 import torch
-from models.resnet_simclr import ResNetSimCLR
+from models.resnet_simclr import ResNetSimCLR, RADSimCLR
 from torch.utils.tensorboard import SummaryWriter
 import torch.nn.functional as F
 from loss.nt_xent import NTXentLoss
@@ -61,7 +61,7 @@ class SimCLR(object):
 
         train_loader, valid_loader = self.dataset.get_data_loaders()
 
-        model = ResNetSimCLR(**self.config["model"]).to(self.device)
+        model = RADSimCLR(**self.config["model"]).to(self.device)
         model = self._load_pre_trained_weights(model)
 
         optimizer = torch.optim.Adam(model.parameters(), 3e-4, weight_decay=eval(self.config['weight_decay']))

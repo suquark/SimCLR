@@ -3,6 +3,32 @@ import torch.nn.functional as F
 import torchvision.models as models
 
 
+class RADSimCLR(nn.Module):
+    def __init__(self, base_model, out_dim, obs_shape=(9, 84, 84), feature_dim=256, num_layers=4, num_filters=32):
+        self.convs = nn.ModuleList(
+             [nn.Conv2d(obs_shape[0], num_filters, 3, stride=2)]
+        )
+        for _ in range(num_layers - 1):
+            self.convs.append(nn.Conv2d(num_filters, num_filters, 3, stride=1))
+        self.fc = nn.Linear(num_filters * 35 * 35, feature_dim)
+
+        # projection MLP
+        self.l1 = nn.Linear(feature_dim, feature_dim)
+        self.l2 = nn.Linear(feature_dim, out_dim)
+
+    def forward(self, x):
+        if x.max() > 1.:
+             x = x / 255.
+        for c in self.convs:
+            x = c(x).relu()
+        x = x.view(x.size(0), -1)
+        h = self.fc(x).relu()
+        x = self.l1(h)
+        x = F.relu(x)
+        x = self.l2(x)
+        return h, x
+
+
 class ResNetSimCLR(nn.Module):
 
     def __init__(self, base_model, out_dim):

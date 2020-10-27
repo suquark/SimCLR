@@ -1,11 +1,38 @@
 import numpy as np
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SubsetRandomSampler
 import torchvision.transforms as transforms
 from data_aug.gaussian_blur import GaussianBlur
 from torchvision import datasets
+from PIL import Image
+import torch
 
 np.random.seed(0)
+
+
+class RLTrajectoryDataSet(Dataset):
+    def __init__(self, transform):
+        self.transform = transform
+
+    def __len__(self):
+        return 600000 // 3
+
+    def __getitem__(self, idx):
+        imgs = []
+        for i in range(3):
+            im = Image.open(f"/home/ubuntu/efs/rad/saved_images/{idx*3+i}.jpg")
+            width, height = im.size   # Get dimensions
+            new_width, new_height = 84, 84
+            left = (width - new_width)/2
+            top = (height - new_height)/2
+            right = (width + new_width)/2
+            bottom = (height + new_height)/2
+
+            # Crop the center of the image
+            im = im.crop((left, top, right, bottom))
+            im = self.transform(im)
+            imgs.append(im)
+        return torch.cat(imgs, dim=-3)
 
 
 class DataSetWrapper(object):
@@ -20,8 +47,7 @@ class DataSetWrapper(object):
     def get_data_loaders(self):
         data_augment = self._get_simclr_pipeline_transform()
 
-        train_dataset = datasets.STL10('./data', split='train+unlabeled', download=True,
-                                       transform=SimCLRDataTransform(data_augment))
+        train_dataset = RLTrajectoryDataSet(transform=SimCLRDataTransform(data_augment))
 
         train_loader, valid_loader = self.get_train_validation_data_loaders(train_dataset)
         return train_loader, valid_loader
