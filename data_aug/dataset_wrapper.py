@@ -15,12 +15,13 @@ class RLTrajectoryDataSet(Dataset):
         self.transform = transform
 
     def __len__(self):
-        return 600000 // 3
+        # we only take the last 200,000 examples
+        return (600_000 // 3) // 3
 
     def __getitem__(self, idx):
         imgs = []
         for i in range(3):
-            im = Image.open(f"/home/ubuntu/efs/rad/saved_images/{idx*3+i}.jpg")
+            im = Image.open(f"/home/ubuntu/efs/rad/saved_images/{400_000 + idx*3+i}.jpg")
             width, height = im.size   # Get dimensions
             new_width, new_height = 84, 84
             left = (width - new_width)/2
