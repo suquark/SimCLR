@@ -1,11 +1,11 @@
 import numpy as np
+from PIL import Image
+
+import torch
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SubsetRandomSampler
-import torchvision.transforms as transforms
-from data_aug.gaussian_blur import GaussianBlur
-from torchvision import datasets
-from PIL import Image
-import torch
+
+from data_aug.transforms import SimCLRTransformForRL
 
 np.random.seed(0)
 
@@ -18,7 +18,7 @@ class RLTrajectoryDataSet(Dataset):
         return 600000 // 3
 
     def __getitem__(self, idx):
-        x1, x2 = [], []
+        imgs = []
         for i in range(3):
             im = Image.open(f"/home/ubuntu/efs/rad/saved_images/{idx*3+i}.jpg")
             width, height = im.size   # Get dimensions
@@ -30,10 +30,9 @@ class RLTrajectoryDataSet(Dataset):
 
             # Crop the center of the image
             im = im.crop((left, top, right, bottom))
-            im1, im2 = self.transform(im)
-            x1.append(im1)
-            x2.append(im2)
-        return (torch.cat(x1, dim=-3), torch.cat(x2, dim=-3)), 0
+            imgs.append(im)
+        (x1, x1_params), (x2, x2_params) = self.transform(imgs)
+        return (torch.cat(x1, dim=-3), torch.cat(x2, dim=-3)), (x1_params, x2_params)
 
 
 class DataSetWrapper(object):
@@ -55,13 +54,7 @@ class DataSetWrapper(object):
 
     def _get_simclr_pipeline_transform(self):
         # get a set of data augmentation transformations as described in the SimCLR paper.
-        color_jitter = transforms.ColorJitter(0.8 * self.s, 0.8 * self.s, 0.8 * self.s, 0.2 * self.s)
-        data_transforms = transforms.Compose([transforms.RandomResizedCrop(size=self.input_shape[0]),
-                                              transforms.RandomHorizontalFlip(),
-                                              transforms.RandomApply([color_jitter], p=0.8),
-                                              transforms.RandomGrayscale(p=0.2),
-                                              GaussianBlur(kernel_size=int(0.1 * self.input_shape[0])//2*2+1),
-                                              transforms.ToTensor()])
+        data_transforms = SimCLRTransformForRL(self.input_shape[0], self.s)
         return data_transforms
 
     def get_train_validation_data_loaders(self, train_dataset):
