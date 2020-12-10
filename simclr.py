@@ -43,13 +43,13 @@ class SimCLR(object):
         print("Running on:", device)
         return device
 
-    def _step(self, model, xis, xjs, n_iter):
+    def _step(self, model, xis, xjs, dais, dajs, n_iter):
 
         # get the representations and the projections
-        ris, zis = model(xis)  # [N,C]
+        ris, zis = model(xis, dais)  # [N,C]
 
         # get the representations and the projections
-        rjs, zjs = model(xjs)  # [N,C]
+        rjs, zjs = model(xjs, dajs)  # [N,C]
 
         # normalize projection feature vectors
         zis = F.normalize(zis, dim=1)
@@ -86,13 +86,13 @@ class SimCLR(object):
 
         for epoch_counter in range(self.config['epochs']):
           with tqdm.tqdm(total=len(train_loader)) as progress_bar:
-            for (xis, xjs), _ in train_loader:
+            for (xis, xjs), (dais, dajs) in train_loader:
                 optimizer.zero_grad()
 
                 xis = xis.to(self.device)
                 xjs = xjs.to(self.device)
 
-                loss = self._step(model, xis, xjs, n_iter)
+                loss = self._step(model, xis, xjs, dais, dajs, n_iter)
 
                 if n_iter % self.config['log_every_n_steps'] == 0:
                     self.writer.add_scalar('train_loss', loss, global_step=n_iter)
@@ -145,11 +145,11 @@ class SimCLR(object):
 
             valid_loss = 0.0
             counter = 0
-            for (xis, xjs), _ in valid_loader:
+            for (xis, xjs), (dais, dajs) in valid_loader:
                 xis = xis.to(self.device)
                 xjs = xjs.to(self.device)
 
-                loss = self._step(model, xis, xjs, counter)
+                loss = self._step(model, xis, xjs, dais, dajs, counter)
                 valid_loss += loss.item()
                 counter += 1
             valid_loss /= counter

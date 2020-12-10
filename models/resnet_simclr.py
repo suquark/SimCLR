@@ -1,6 +1,20 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
+
+
+def equivariantize_feature(z, data_augment_args):
+    img_size, (top, left, height, width), flipped = data_augment_args
+    # since z > 0 after relu(), we do not need to offset it more
+    z = z * img_size
+    zx, zy = z.reshape(z.size(0), -1, 2).chunk(dim=-1)
+    if flipped:
+        zx = img_size - zx
+    zx = zx / img_size * width + left
+    zy = zy / img_size * height + top
+    new_z = torch.cat([zx, zy], dim=1)
+    return new_z / img_size
 
 
 class RADSimCLR(nn.Module):
@@ -17,13 +31,15 @@ class RADSimCLR(nn.Module):
         self.l1 = nn.Linear(feature_dim, feature_dim)
         self.l2 = nn.Linear(feature_dim, out_dim)
 
-    def forward(self, x):
+    def forward(self, x, data_augment_args=None):
         if x.max() > 1.:
              x = x / 255.
         for c in self.convs:
             x = c(x).relu()
         x = x.view(x.size(0), -1)
         h = self.fc(x).relu()
+        if data_augment_args is not None:
+            h = equivariantize_feature(h, data_augment_args)
         x = self.l1(h)
         x = F.relu(x)
         x = self.l2(x)

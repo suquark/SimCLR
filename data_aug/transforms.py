@@ -20,6 +20,7 @@ class SimCLRTransformForRL:
                  color_jitter_prob=0.8,
                  gray_scale_prob=0.2,
                  guassian_blur_prob=0.5):
+        self.img_size = img_size
         self.s = color_jitter_strength
         self.color_jitter_prob = color_jitter_prob
         self.gray_scale_prob = gray_scale_prob
@@ -46,7 +47,7 @@ class SimCLRTransformForRL:
             ratio = np.random.random_sample()
             imgs = [self.guassian_blur(img, ratio) for img in imgs]
         imgs = [self.to_tensor(img) for img in imgs]
-        return imgs, (params, flipped)
+        return imgs, (self.img_size, params, flipped)
 
 
 # See RandomResizedCrop and RandomHorizontalFlip in 'torchvision.transforms.transforms'
