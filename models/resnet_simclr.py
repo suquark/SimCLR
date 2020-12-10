@@ -6,12 +6,12 @@ import torchvision.models as models
 
 def equivariantize_feature(z, data_augment_args):
     img_size, (top, left, height, width), flipped = data_augment_args
-    img_size = img_size.reshape(z.size(0), 1)
-    top = top.reshape(z.size(0), 1)
-    left = left.reshape(z.size(0), 1)
-    height = height.reshape(z.size(0), 1)
-    width = width.reshape(z.size(0), 1)
-    flipped = flipped.reshape(z.size(0), 1)
+    img_size = img_size.reshape(z.size(0), 1).to(z.device)
+    top = top.reshape(z.size(0), 1).to(z.device)
+    left = left.reshape(z.size(0), 1).to(z.device)
+    height = height.reshape(z.size(0), 1).to(z.device)
+    width = width.reshape(z.size(0), 1).to(z.device)
+    flipped = flipped.reshape(z.size(0), 1).to(z.device)
 
     # since z > 0 after relu(), we do not need to offset it more
     z = z * img_size
