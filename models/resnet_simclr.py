@@ -11,7 +11,7 @@ def equivariantize_feature(z, data_augment_args):
     left = left.reshape(z.size(0), 1).to(z.device)
     height = height.reshape(z.size(0), 1).to(z.device)
     width = width.reshape(z.size(0), 1).to(z.device)
-    flipped = flipped.reshape(z.size(0), 1).to(z.device)
+    flipped = flipped.reshape(z.size(0), 1).to(z.device).float()
 
     # since z > 0 after relu(), we do not need to offset it more
     z = z * img_size
