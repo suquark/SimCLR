@@ -6,15 +6,26 @@ import torchvision.models as models
 
 def equivariantize_feature(z, data_augment_args):
     img_size, (top, left, height, width), flipped = data_augment_args
+    img_size = img_size.reshape(z.size(0), 1)
+    top = top.reshape(z.size(0), 1)
+    left = left.reshape(z.size(0), 1)
+    height = height.reshape(z.size(0), 1)
+    width = width.reshape(z.size(0), 1)
+    flipped = flipped.reshape(z.size(0), 1)
+
     # since z > 0 after relu(), we do not need to offset it more
     z = z * img_size
     zx, zy = z.reshape(z.size(0), -1, 2).chunk(dim=-1)
-    if flipped:
-        zx = img_size - zx
+
+    zx = (1 - flipped) * zx + flipped * (img_size - zx)
+
     zx = zx / img_size * width + left
     zy = zy / img_size * height + top
+
+    zx = zx / img_size
+    zy = zy / img_size
     new_z = torch.cat([zx, zy], dim=1)
-    return new_z / img_size
+    return new_z
 
 
 class RADSimCLR(nn.Module):
