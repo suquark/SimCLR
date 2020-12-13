@@ -40,7 +40,7 @@ class ResNetSimCLR(nn.Module):
         resnet = self._get_basemodel(base_model)
         num_ftrs = resnet.fc.in_features
         layers = list(resnet.children())[:-1]
-        layers[0] = nn.Conv2d(obs_shape[0], resnet.inplanes, kernel_size=5, stride=2, padding=2,
+        layers[0] = nn.Conv2d(obs_shape[0], 64, kernel_size=5, stride=2, padding=2,
                               bias=False)
         nn.init.kaiming_normal_(layers[0].weight, mode='fan_out', nonlinearity='relu')
         self.features = nn.Sequential(*layers)
