@@ -8,7 +8,7 @@ fp16_precision: False
 
 model:
   out_dim: 256
-  base_model: "xxxxxxx"
+  base_model: "resnet18"
 
 dataset:
   s: 1
